@@ -1,2 +1,2 @@
 *.csv filter=lfs diff=lfs merge=lfs -text
-dataset/transaction_data_2019.csv filter=lfs diff=lfs merge=lfs -text
+# dataset/transaction_data_2019.csv filter=lfs diff=lfs merge=lfs -text

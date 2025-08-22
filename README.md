@@ -75,12 +75,120 @@ Langkah-langkah dalam mengimport dataset kedalam cloud DB di Aiven yaitu sebagai
 Terdapat 2 script query SQL yaitu:
 
 ### Query untuk Update Column
+```
+-- TABLE CARDS_DATA
+-- Melakukan penghapusan nilai '$' pada kolom credit_limit dan mengubah tipe data menjadi numeric
+alter table cards_data
+alter column credit_limit type numeric
+using replace(credit_limit, '$','')::numeric;
 
+-- TABLE TRANSACTION_DATA_2019
+-- Melakukan penghapusan nilai '$' pada kolom amount dan mengubah tipe data menjadi numeric
+alter table transaction_data_2019 
+alter column amount type numeric
+using replace(amount, '$','')::numeric;
+
+-- TABLE USERS_DATA
+-- Melakukan penghapusan nilai '$' pada kolom amount dan mengubah tipe data menjadi numeric
+alter table users_data
+alter column per_capita_income type numeric
+using replace(per_capita_income, '$','')::numeric,
+alter column yearly_income type numeric
+using replace(yearly_income, '$','')::numeric,
+alter column total_debt type numeric
+using replace(total_debt, '$','')::numeric;
+```
 
 ### Query untuk Eksplorasi Data
+```
+--- EKSPLORASI DATA PADA TABEL USERS ---
+-- Jumlah User Berdasarkan Gender
+select gender, count(id) as total_users
+from users_data ud 
+group by gender
+order by total_users desc;
 
 
-## 4. Link Looker Studio
+--- EKSPLORASI DATA PADA TABEL CARDS ---
+-- Total Card Berdasarkan Brand
+SELECT card_brand, count(id) AS total_card 
+FROM cards_data cd 
+GROUP BY card_brand 
+ORDER BY total_card DESC ;
+
+-- Total Card Berdasarkan Type
+SELECT card_type, count(id) AS total_card 
+FROM cards_data cd 
+GROUP BY card_type 
+ORDER BY total_card DESC; 
+
+
+--- EKPLORASI DATA PADA TABEL TRANSACTIONS DAN JOIN TABLE ---
+-- Total Transaksi berdasarkan Use Chip
+select use_chip, count(id) as total_transactions
+from transaction_data_2019 td 
+group by use_chip 
+order by total_transactions desc;
+
+
+-- Jumlah Transaksi pada Tabel Transaksi
+select count(1) as total_transactions
+from transaction_data_2019 td;
+
+-- Total Merchant pada Tabel Transaksi
+select count(distinct merchant_city) as total_merchant
+from transaction_data_2019 td;
+
+-- Average dari Age User
+select round(avg(ud.current_age)) as average_age
+from users_data ud 
+right join transaction_data_2019 td 
+on ud.id = td.client_id;
+
+-- Average Cards yang Dimiliki User
+select round(avg(ud.num_credit_cards)) as average_num_cc_users 
+from users_data ud
+right join transaction_data_2019 td 
+on ud.id = td.client_id;
+
+-- Average dari Total Debt User
+select (avg(ud.total_debt)) as average_total_debt_users 
+from users_data ud
+right join transaction_data_2019 td 
+on ud.id = td.client_id;
+
+-- Sum dari Amount User
+select sum(amount) as sum_of_amount_user
+from transaction_data_2019 td;
+
+-- Average dari Yearly Income User
+select (avg(ud.yearly_income)) as average_yearly_income_users 
+from users_data ud
+right join transaction_data_2019 td 
+on ud.id = td.client_id;
+
+-- Top 100 Merchant dengan total transaksi terbanyak oleh user
+select merchant_city, count(id) as total_transactions
+from transaction_data_2019 td 
+group by merchant_city 
+order by total_transactions desc
+limit 100;
+
+-- List Transaksi Error yang dilakukan User
+select td.errors, count(td.id) as total_transactions
+from transaction_data_2019 td
+where td.errors is not null
+group by td.errors 
+order by total_transactions desc;
+
+-- Trend Total Transactions dan Total Amount User day by day
+select date(date) as transaction_days, count(id) as total_transactions, sum(amount) as total_amount
+from transaction_data_2019 td 
+group by transaction_days
+order by transaction_days asc;
+```
+
+## 4. Dashboard 
 ![Dashboard Analysis](images/dashboard.jpg)
 
 [Link Dashboard](https://lookerstudio.google.com/reporting/80ea4855-2881-4657-a7fe-9a4ec0073c54) 
